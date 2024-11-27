@@ -68,10 +68,10 @@ function staticLoadPlaces() {
     return [
         {
             name: 'ship',
-            modelName: 'https://shimizukobo.github.io/shidenkai_salvage/assets/ship.glb',
+            modelName: 'https://shimizukobo.github.io/shidenkai_senohama/assets/ship.glb',
             location: {
-                lat: 32.94275472461306,
-                lng: 132.56692766713076,
+                lat: 32.9492049,
+                lng: 132.4998419,
             }
         },
 
