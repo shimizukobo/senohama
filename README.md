@@ -1,1 +1,1 @@
-# senohama
+# shidekai_senohama
