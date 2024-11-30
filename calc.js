@@ -16,6 +16,9 @@ export class CalcVR {
         this.distance = current.distanceTo(target);
         this.bearing = current.finalBearingTo(target);
         this.currentPosition = currentPosiArg;
+        if(this.distance < 500) {
+            this.newDistance = this.distance;
+        }
     }
     //表示位置を計算
     calcNewPosition(currentPosition, bearing, newTargetToDistance) {
@@ -25,7 +28,11 @@ export class CalcVR {
     }
     // サイズを計算
     calcSizeDist(distance) {
-        if(distance <= 1000 && distance >= 500){
+        if(distance < 500){
+            this.objectSize = '1.0 1.0 1.0';
+            this.newDistance = distance;
+//alert("2距離 " + distance);
+        }else if(distance <= 1000 && distance >= 500){
 //            this.objectSize = '25 25 25';
 //            this.objectSize = '2.5 2.5 2.5';
 //            this.objectSize = '1.2 1.2 1.2';
@@ -85,34 +92,6 @@ function renderPlaces(places, pos) {
     let cal = new CalcVR();
     var jsonAltitude = 0;
 
-/*
-    //まず現在地の緯度経度を取得する
-    var lat = pos.coords.latitude;
-    var lon = pos.coords.longitude;
-    //国土地理院API用に有効桁数を合わせる。
-    var adjustiveLat = lat + "00";
-    var adjustiveLon = lon + "0";
-    //文字列に変換
-    var stringLat = String(adjustiveLat);
-    var stringLon = String(adjustiveLon);
-     //国土地理院APIに現在地の緯度経度を渡して、標高を取得する
-    var url = 'http://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=' + stringLon + '&lat=' + stringLat + '&outtype=JSON';
-
-    fetch(url)
-    .then((response)=> {
-        alert("OK");
-      return response.json();
-    })
-    .then((data)=> {    //取得したjsonをパース
-      jsonAltitude = JSON.stringify(data);
-        //alert("緯度 " + pos.coords.latitude + "\n経度 " + pos.coords.longitude + "\n標高 " + jsonAltitude);
-    })
-    .catch((error)=> {  //失敗時に実行される
-        //alert("Error");
-    });
-    
-
-*/
         jsonAltitude = pos.coords.altitude;
 //alert("標高 " + jsonAltitude);
         if(jsonAltitude == 'undefind') {
@@ -121,11 +100,8 @@ function renderPlaces(places, pos) {
         }
         else{
             jsonAltitude = jsonAltitude - 33;
-//            jsonAltitude = 250;
-        }    
+        }  
 alert("\nちゃんと撮れるかな ver1.0.0\n紫電改陸上げを見るブラウザAR\n緯度 " + pos.coords.latitude + "\n経度 " + pos.coords.longitude + "\n標高 " + jsonAltitude + "\nボタンをタップすると撮影できます。\n\n初回の起動時には、位置情報を取得がうまくいかない場合は、\n少し時間をおいてブラウザの更新をしてください。");
-//jsonAltitude = -(jsonAltitude/2);
-
     
     places.forEach((place) => {
         let latitude = place.location.lat;
@@ -135,20 +111,22 @@ alert("\nちゃんと撮れるかな ver1.0.0\n紫電改陸上げを見るブラ
         cal.calcDist([crd.latitude, crd.longitude], [latitude, longitude]);
         cal.calcNewPosition(cal.currentPosition, cal.bearing, cal.newDistance);
         cal.calcSizeDist(cal.distance);
-        
-jsonAltitude = -(jsonAltitude*(cal.newDistance/cal.distance));
-       
+               
         let model = document.createElement('a-entity');
 //        model.setAttribute('look-at', '[gps-camera]');    //正面を向ける
         model.setAttribute('look-at', '');    //向きを固定する
-        model.setAttribute('gps-entity-place', `latitude: ${cal.newPosition[0]}; longitude: ${cal.newPosition[1]};`);
-//        model.setAttribute('gps-entity-place', `latitude: ${place.location.lat}; longitude: ${place.location.lng};`);
+        if(cal.distance >= 500){
+jsonAltitude = -(jsonAltitude*(cal.newDistance/cal.distance));
+            model.setAttribute('gps-entity-place', `latitude: ${cal.newPosition[0]}; longitude: ${cal.newPosition[1]};`);
+        }else {
+jsonAltitude = -jsonAltitude;
+            model.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude };`);
+        }
         model.setAttribute('gltf-model', `${modelName}`);
-//        model.setAttribute('position', '0 0 -${jsonAltitude}');
         model.setAttribute('position', '0 '+jsonAltitude+' 0');
         model.setAttribute('animation-mixer', '');
         model.setAttribute('scale', `${cal.objectSize}`);
-
+//alert(`緯度 ${latitude};\n経度 ${longitude};\n標高 ${jsonAltitude};\n緯度 ${cal.newPosition[0]};\n経度 ${cal.newPosition[1]};`);
         model.addEventListener('loaded', () => {
             window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'))
         });
@@ -168,51 +146,8 @@ function success(pos) {
     let places = staticLoadPlaces();
     renderPlaces(places, pos);
 }
-  
+
 function error(err) {
    console.warn(`ERROR(${err.code}): ${err.message}`);
    alert('Unable to capture current location.');
- }
-
-
-function test(elevation) {
-    test2(position,elevation);
-    navigator.geolocation.getCurrentPosition(position);
 }
-
-function test2(position,elevation) {
-
-    //まず現在地の緯度経度を取得する
-    var lat = position.coords.latitude;
-    var lon = position.coords.longitude;
-
-    //国土地理院API用に有効桁数を合わせる。
-    var adjustiveLat = lat + "00";
-    var adjustiveLon = lon + "0";
-
-    //文字列に変換
-    var stringLat = String(adjustiveLat);
-    var stringLon = String(adjustiveLon);
-
-    //国土地理院APIに現在地の緯度経度を渡して、標高を取得する
-    const url = 'http://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?lon=' + stringLon + '&lat=' + stringLat + '&outtype=JSON';
-
-//    console.log(url);
-    elevation = 0;
-    
-    fetch(url).then(function(response) {
-      return response.text();
-    }).then(function(text) {
-//      console.log(text);
-      
-      //取得したjsonをパース
-      var jsonAltitude = JSON.parse(text);
-        elevation = jsonAltitude.elevation;
-//      console.log("標高：" + jsonAltitude.elevation + "m");
-
-      //ポップアップ表示
-//      alert("現在地の標高は" + jsonAltitude.elevation + "mです。" +  "(" + "緯度：" + stringLat + "、経度：" + stringLon + ")")
-
-    });
-
-}    
