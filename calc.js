@@ -125,6 +125,7 @@ jsonAltitude = -jsonAltitude;
         }
         model.setAttribute('gltf-model', `${modelName}`);
         model.setAttribute('position', '0 '+jsonAltitude+' 0');
+        model.setAttribute('rotation', '0 20 0');
         model.setAttribute('animation-mixer', '');
         model.setAttribute('scale', `${cal.objectSize}`);
 //alert(`緯度 ${latitude};\n経度 ${longitude};\n標高 ${jsonAltitude};\n緯度 ${cal.newPosition[0]};\n経度 ${cal.newPosition[1]};`);
